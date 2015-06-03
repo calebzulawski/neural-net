@@ -1,14 +1,13 @@
 #ifndef ANN_H
 #define ANN_H
 
-class Layer {
-public:
-	Layer();
-};
+#include <vector>
 
 class Network {
 public:
-	Network();
+	std::vector< std::vector<double>* >* inputWeights;
+	std::vector< std::vector<double>* >* outputWeights;
+	Network(int numInputs, int numHidden, int numOutput);
 };
 
 #endif /* ANN_H */
