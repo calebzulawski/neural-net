@@ -22,3 +22,6 @@ $(TESTEXE): $(TESTOBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	@rm -f $(TRAINEXE) $(TESTEXE) *.o

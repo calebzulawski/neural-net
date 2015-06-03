@@ -1,6 +1,11 @@
 # Executables
-neural-net
-neural-net.exe
+train
+train.exe
+test
+test.exe
 
 # Object files
 *.o
+
+# Data
+data/
