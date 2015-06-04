@@ -7,5 +7,10 @@ using namespace std;
 int main(int argc, char *argv[]) {
 	Network nn;
 	nn.loadFromFile("data/sample.NNWDBC.init");
+
+	Dataset trainData;
+	trainData.loadFromFile("data/wdbc.train");
+
+
 	nn.writeToFile("nn.trained");
 }
