@@ -13,6 +13,9 @@ private:
 public:
 	bool loadFromFile(std::string filename);
 	bool sample(int i, std::vector<double> &_features, std::vector<bool> &_labels);
+	bool classify(int i, std::vector<bool> labels);
+	int size(){ return numSamples; };
+	void printStats();
 };
 
 class Network {
@@ -27,8 +30,9 @@ public:
 	void allocateWeights(int _numInputs, int _numHidden, int _numOutput);
 	bool loadFromFile(std::string filename);
 	bool writeToFile(std::string filename);
-	void getActivation(std::vector<double> &_sample, std::vector<double> &_label);
-	void train(Dataset data, double learnRate, int epochs);
+	void getActivation(std::vector<double> &_sample, std::vector<bool> &_label);
+	void train(Dataset &data, double learnRate, int epochs);
+	void test(Dataset &data);
 };
 
 #endif /* ANN_H */

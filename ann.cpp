@@ -115,7 +115,7 @@ void Network::allocateWeights(int _numInputs, int _numHidden, int _numOutput) {
 	activation[2].resize(numOutput);
 }
 
-void Network::getActivation(std::vector<double> &_sample, std::vector<double> &_label) {
+void Network::getActivation(std::vector<double> &_sample, std::vector<bool> &_label) {
 	// Input layer
 	for (int i=0; i < numInputs; i++) {
 		activation[0][i] = _sample[i];
@@ -133,8 +133,66 @@ void Network::getActivation(std::vector<double> &_sample, std::vector<double> &_
 	}
 }
 
-void Network::train(Dataset data, double learnRate, int epochs) {
-	
+void Network::train(Dataset &data, double learnRate, int epochs) {
+	for (int iter=0; iter < epochs; iter++) {
+		for (int i=0; i < data.size(); i++) {
+			std::vector<double> sampleFeatures;
+			std::vector<bool> sampleLabels;
+			std::vector<double> outputDelta(numOutput,0);
+			std::vector<double> hiddenDelta(numHidden,0);
+
+			data.sample(i, sampleFeatures, sampleLabels);
+			getActivation(sampleFeatures, sampleLabels);
+
+			// Output layer
+			for (int j=0; j < numOutput; j++) {
+				outputDelta[j] = SIGDERIV(input[2][j]) * (sampleLabels[j] - activation[2][j]);
+			}
+
+			// Hidden layer
+			for (int j=0; j < numHidden; j++) {
+				for (int k=0; k < numOutput; k++) {
+					hiddenDelta[j] += outputWeights[k][j+1] * outputDelta[k];
+				}
+				hiddenDelta[j] *= SIGDERIV(input[1][j]);
+			}
+
+			// Update weights from hidden layer to output layer
+			for (int j=0; j < numOutput; j++) {
+				for (int k=0; k < numHidden; k++) {
+					outputWeights[j][k+1] = outputWeights[j][k+1] + learnRate * activation[1][k] * outputDelta[j];
+				}
+				outputWeights[j][0] = outputWeights[j][0] + learnRate * -1 * outputDelta[j]; // Bias
+			}
+
+			// Update weights from input layer to hidden layer
+			for (int j=0; j < numHidden; j++) {
+				for (int k=0; k < numInputs; k++) {
+					inputWeights[j][k+1] = inputWeights[j][k+1] + learnRate * activation[0][k] * hiddenDelta[j];
+				}
+				inputWeights[j][0] = inputWeights[j][0] + learnRate * -1 * hiddenDelta[j]; // Bias
+			}
+
+			// Update weight vector
+			weights[0] = inputWeights;
+			weights[1] = outputWeights;
+		}
+	}
+}
+
+void Network::test(Dataset &data) {
+	for (int i=0; i < data.size(); i++) {
+		std::vector<double> sampleFeatures;
+		std::vector<bool> sampleLabels;
+		data.sample(i, sampleFeatures, sampleLabels);
+		getActivation(sampleFeatures, sampleLabels);
+		std::vector<bool> classifiedVec(numOutput);
+		for (int j=0; j < numOutput; j++) {
+			std::cout << activation[2][j] << std::endl;
+			classifiedVec[j] = activation[2][j] >= 1 ? true : false;
+		}
+		data.classify(i, classifiedVec);
+	}
 }
 
 bool Dataset::loadFromFile(std::string filename) {
@@ -182,5 +240,33 @@ bool Dataset::sample(int i, std::vector<double> &_features, std::vector<bool> &_
 		return true;
 	} else {
 		return false;
+	}
+}
+
+bool Dataset::classify(int i, std::vector<bool> classifiedVec) {
+	if (i < numSamples) {
+		classified[i] = classifiedVec;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void Dataset::printStats() {
+	for (int l=0; l < numLabels; l++) {
+		int A, B, C, D;
+		for (int i=0; i < numSamples; i++) {
+			if (labels[i][l] && classified[i][l])
+				A++;
+			if (!labels[i][l] && classified[i][l])
+				B++;
+			if (labels[i][l] && !classified[i][l])
+				C++;
+			if (!labels[i][l] && !classified[i][l])
+				D++;
+		}
+		std::cout << "Accuracy: " << (A + D) / (A + B + C + D) << std::endl;
+		std::cout << "Precision: " << A / (A + B) << std::endl;
+		std::cout << "Recall: " << A / (A + C) << std::endl; 
 	}
 }
