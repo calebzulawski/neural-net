@@ -11,7 +11,6 @@
 #define SIGMOID(x) 1/(1+exp(-x))
 #define SIGDERIV(x) SIGMOID(x)*(1-SIGMOID(x))
 
-// Constructor for reading network from file
 bool Network::loadFromFile(std::string filename) {
 	std::ifstream infile(filename, std::ifstream::binary);
 	std::string line;
@@ -122,7 +121,7 @@ void Network::getActivation(std::vector<double> &_sample, std::vector<bool> &_la
 	}
 
 	// Hidden and output layer
-	for(int l=1; l < 2; l++) {
+	for(int l=1; l < 3; l++) {
 		for(unsigned int i=0; i < input[l].size(); i++) {
 			input[l][i] = -1 * weights[l-1][i][0];
 			for(unsigned int j=0; j < input[l-1].size(); j++) {
@@ -130,6 +129,16 @@ void Network::getActivation(std::vector<double> &_sample, std::vector<bool> &_la
 			}
 			activation[l][i] = SIGMOID(input[l][i]);
 		}
+	}
+}
+
+void Network::printActivation() {
+	for (int l=0; l < 3; l++) {
+		std::cout << "Layer " << l << std::endl;
+		for (unsigned int i=0; i < activation[l].size(); i++) {
+			std::cout << activation[l][i] << " ";
+		}
+		std::cout << std::endl;
 	}
 }
 
@@ -188,10 +197,8 @@ void Network::test(Dataset &data) {
 		getActivation(sampleFeatures, sampleLabels);
 		std::vector<bool> classifiedVec(numOutput);
 		for (int j=0; j < numOutput; j++) {
-			std::cout << activation[2][j] << std::endl;
-			classifiedVec[j] = activation[2][j] >= 1 ? true : false;
+			data.classify(i, j, (activation[2][j] >= .5 ? true : false));
 		}
-		data.classify(i, classifiedVec);
 	}
 }
 
@@ -243,9 +250,9 @@ bool Dataset::sample(int i, std::vector<double> &_features, std::vector<bool> &_
 	}
 }
 
-bool Dataset::classify(int i, std::vector<bool> classifiedVec) {
-	if (i < numSamples) {
-		classified[i] = classifiedVec;
+bool Dataset::classify(int i, int j, bool prediction) {
+	if ((i < numSamples) & (j < numLabels)) {
+		classified[i][j] = prediction;
 		return true;
 	} else {
 		return false;
@@ -254,7 +261,7 @@ bool Dataset::classify(int i, std::vector<bool> classifiedVec) {
 
 void Dataset::printStats() {
 	for (int l=0; l < numLabels; l++) {
-		int A, B, C, D;
+		double A, B, C, D;
 		for (int i=0; i < numSamples; i++) {
 			if (labels[i][l] && classified[i][l])
 				A++;
@@ -265,8 +272,11 @@ void Dataset::printStats() {
 			if (!labels[i][l] && !classified[i][l])
 				D++;
 		}
-		std::cout << "Accuracy: " << (A + D) / (A + B + C + D) << std::endl;
-		std::cout << "Precision: " << A / (A + B) << std::endl;
-		std::cout << "Recall: " << A / (A + C) << std::endl; 
+		double accuracy = (A + D) / (A + B + C + D);
+		double precision = A / (A + B);
+		double recall = A / (A + C);
+		std::cout << "Accuracy: " << accuracy << std::endl;
+		std::cout << "Precision: " << precision << std::endl;
+		std::cout << "Recall: " << recall << std::endl; 
 	}
 }

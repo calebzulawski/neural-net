@@ -13,7 +13,7 @@ private:
 public:
 	bool loadFromFile(std::string filename);
 	bool sample(int i, std::vector<double> &_features, std::vector<bool> &_labels);
-	bool classify(int i, std::vector<bool> labels);
+	bool classify(int i, int j, bool prediction);
 	int size(){ return numSamples; };
 	void printStats();
 };
@@ -31,6 +31,7 @@ public:
 	bool loadFromFile(std::string filename);
 	bool writeToFile(std::string filename);
 	void getActivation(std::vector<double> &_sample, std::vector<bool> &_label);
+	void printActivation();
 	void train(Dataset &data, double learnRate, int epochs);
 	void test(Dataset &data);
 };
