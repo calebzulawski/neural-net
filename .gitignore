@@ -6,3 +6,9 @@ test.exe
 
 # Object files
 *.o
+
+# Script files
+scripts/grades.results
+scripts/grades.trained
+scripts/wdbc.results
+scripts/wdbc.trained

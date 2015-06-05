@@ -1,13 +1,13 @@
 #!/bin/bash
-INIT=data/wdbc/sample.NNWDBC.init
-SAMPLEW=data/wdbc/sample.NNWDBC.1.100.trained
-TRAINEDW=scripts/wdbc.trained
-TRAINDATA=data/wdbc/wdbc.train
-TESTDATA=data/wdbc/wdbc.test
-LEARNRATE=0.1
+INIT=data/grades/sample.NNGrades.init
+SAMPLEW=data/grades/sample.NNGrades.05.100.trained
+TRAINEDW=scripts/grades.trained
+TRAINDATA=data/grades/grades.train
+TESTDATA=data/grades/grades.test
+LEARNRATE=0.05
 EPOCHS=100
-MYRESULTS=scripts/wdbc.results
-SAMPLERESULTS=data/wdbc/sample.NNWDBC.1.100.results
+MYRESULTS=scripts/grades.results
+SAMPLERESULTS=data/grades/sample.NNGrades.05.100.results
 
 cd ..
 if [ -f test ]; then

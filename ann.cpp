@@ -283,7 +283,7 @@ bool Dataset::writeStatsToFile(std::string filename) {
 		double precision = A / (A + B);
 		double recall = A / (A + C);
 		double f1 = (2 * precision * recall) / (precision + recall);
-		outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << A << " " << B << " " << C << " " << D << " " << accuracy << " " << precision << " " << recall << " " << f1 << std::endl;
+		outfile << A << " " << B << " " << C << " " << D << " " << std::setiosflags(std::ios::fixed) << std::setprecision(3) << accuracy << " " << precision << " " << recall << " " << f1 << std::endl;
 
 		totalA += A;
 		totalB += B;
