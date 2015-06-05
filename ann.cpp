@@ -11,11 +11,15 @@
 #define SIGMOID(x) 1/(1+exp(-x))
 #define SIGDERIV(x) SIGMOID(x)*(1-SIGMOID(x))
 
+// Load network weights from `filename`
+// Returns true if successful, false if file could not be opened
+// Assumes file is in correct form
 bool Network::loadFromFile(std::string filename) {
 	std::ifstream infile(filename, std::ifstream::binary);
 	std::string line;
 	std::istringstream liness;
 
+	// Check if file opened
 	if (!infile)
 		return false;
 
@@ -48,14 +52,19 @@ bool Network::loadFromFile(std::string filename) {
 	}
 	infile.close();
 
+	// Update weights vector
 	weights.resize(2);
 	weights[0] = inputWeights;
 	weights[1] = outputWeights;
 	return true;
 }
 
+// Writes network weights to `filename`
+// Returns true if successful, false if file could not be created
 bool Network::writeToFile(std::string filename) {
 	std::ofstream outfile(filename, std::ifstream::binary);
+
+	// Check if file created
 	if (!outfile)
 		return false;
 
@@ -72,7 +81,7 @@ bool Network::writeToFile(std::string filename) {
 		outfile << std::endl;
 	}
 
-	// Edges from input layer to hidden layer
+	// Edges from hidden layer to output layer
 	for (int i = 0; i < numOutput; i++) {
 		for (int j = 0; j < numHidden + 1; j++) {
 			outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << outputWeights[i][j];
@@ -86,18 +95,20 @@ bool Network::writeToFile(std::string filename) {
 	return true;
 }
 
+// Initializes the various weight vectors
 void Network::allocateWeights(int _numInputs, int _numHidden, int _numOutput) {
+	// Copy to member variables
 	numInputs = _numInputs;
 	numHidden = _numHidden;
 	numOutput = _numOutput;
 
-	// Edges from input layer to hidden layer
+	// Allocate edges from input layer to hidden layer
 	inputWeights.resize(numHidden);
 	for (unsigned int i = 0; i < inputWeights.size(); i++) {
 		inputWeights[i] = std::vector<double>(numInputs+1,0); // +1 for bias
 	}
 
-	// Edges from hidden layer to output layer
+	// Allocate edges from hidden layer to output layer
 	outputWeights.resize(numOutput);
 	for (unsigned int i = 0; i < outputWeights.size(); i++) {
 		outputWeights[i] = std::vector<double>(numHidden+1,0); // +1 for bias
@@ -114,13 +125,14 @@ void Network::allocateWeights(int _numInputs, int _numHidden, int _numOutput) {
 	activation[2].resize(numOutput);
 }
 
-void Network::getActivation(std::vector<double> &_sample, std::vector<bool> &_label) {
-	// Input layer
+// Calculates the activation of each neuron for a particular input `_sample`
+void Network::getActivation(std::vector<double> &_sample) {
+	// Input layer activations equal to input sample
 	for (int i=0; i < numInputs; i++) {
 		activation[0][i] = _sample[i];
 	}
 
-	// Hidden and output layer
+	// Solve hidden and output layer activations
 	for(int l=1; l < 3; l++) {
 		for(unsigned int i=0; i < input[l].size(); i++) {
 			input[l][i] = -1 * weights[l-1][i][0];
@@ -132,6 +144,7 @@ void Network::getActivation(std::vector<double> &_sample, std::vector<bool> &_la
 	}
 }
 
+// Display all activations for debugging
 void Network::printActivation() {
 	for (int l=0; l < 3; l++) {
 		std::cout << "Layer " << l << std::endl;
@@ -142,23 +155,27 @@ void Network::printActivation() {
 	}
 }
 
+// Train network on dataset `data` with learning rate `learnRate` for `epochs` epochs
 void Network::train(Dataset &data, double learnRate, int epochs) {
+	// Loop over epochs
 	for (int iter=0; iter < epochs; iter++) {
+		// Loop over samples
 		for (int i=0; i < data.size(); i++) {
 			std::vector<double> sampleFeatures;
 			std::vector<bool> sampleLabels;
 			std::vector<double> outputDelta(numOutput,0);
 			std::vector<double> hiddenDelta(numHidden,0);
 
+			// Read sample and calculate activations
 			data.sample(i, sampleFeatures, sampleLabels);
-			getActivation(sampleFeatures, sampleLabels);
+			getActivation(sampleFeatures);
 
-			// Output layer
+			// Output layer delta
 			for (int j=0; j < numOutput; j++) {
 				outputDelta[j] = SIGDERIV(input[2][j]) * (sampleLabels[j] - activation[2][j]);
 			}
 
-			// Hidden layer
+			// Hidden layer delta
 			for (int j=0; j < numHidden; j++) {
 				for (int k=0; k < numOutput; k++) {
 					hiddenDelta[j] += outputWeights[k][j+1] * outputDelta[k];
@@ -189,24 +206,34 @@ void Network::train(Dataset &data, double learnRate, int epochs) {
 	}
 }
 
+// Predict on `data` with current network weights
 void Network::test(Dataset &data) {
+	// Loop over samples
 	for (int i=0; i < data.size(); i++) {
 		std::vector<double> sampleFeatures;
 		std::vector<bool> sampleLabels;
+
+		// Load current sample and calculate activation
 		data.sample(i, sampleFeatures, sampleLabels);
-		getActivation(sampleFeatures, sampleLabels);
-		std::vector<bool> classifiedVec(numOutput);
+		getActivation(sampleFeatures);
+
+		// Loop over each class
 		for (int j=0; j < numOutput; j++) {
+			// Threshold activations to predict
 			data.classify(i, j, (activation[2][j] >= .5 ? true : false));
 		}
 	}
 }
 
+// Load a dataset from `filename`
+// Returns true if successful, false if could not open file
+// Assumes file is in correct form
 bool Dataset::loadFromFile(std::string filename) {
 	std::ifstream infile(filename, std::ifstream::binary);
 	std::string line;
 	std::istringstream liness;
 
+	// Check if file was opened
 	if (!infile)
 		return false;
 
@@ -220,18 +247,25 @@ bool Dataset::loadFromFile(std::string filename) {
 	labels.resize(numSamples);
 	classified.resize(numSamples);
 	for (int i = 0; i < numSamples; i++) {
+		// Read line into stringstream and reset pointers
 		std::getline(infile, line);
 		liness.str(line);
 		liness.clear();
 		
+		// Resize subvectors
 		data[i].resize(numFeatures);
 		labels[i].resize(numLabels);
 		classified[i].resize(numLabels);
 
+		// Extract values from line stringstream
 		for (int j = 0; j < numFeatures; j++) {
 			liness >> data[i][j];
 		}
 		for (int j = 0; j < numLabels; j++) {
+			// labels[i][j] returns a reference object, not a bool
+			// This is due to efficient implementation of std::vector<bool>
+			// Does not allow extraction operator >> to work in its current form
+			// bool temp is a simple workaround
 			bool temp;
 			liness >> temp;
 			labels[i][j] = temp;
@@ -240,6 +274,8 @@ bool Dataset::loadFromFile(std::string filename) {
 	return true;
 }
 
+// Copy the `i`th sample into `_features` and `_labels`
+// Returns true if the sample exists, false if `i` exceeds bounds
 bool Dataset::sample(int i, std::vector<double> &_features, std::vector<bool> &_labels) {
 	if (i < numSamples) {
 		_features = data[i];
@@ -250,6 +286,8 @@ bool Dataset::sample(int i, std::vector<double> &_features, std::vector<bool> &_
 	}
 }
 
+// Copy prediction for the `i`th sample and `j`th class into dataset
+// Returns true if successful, false if `i` or `j` exceeds bounds
 bool Dataset::classify(int i, int j, bool prediction) {
 	if ((i < numSamples) & (j < numLabels)) {
 		classified[i][j] = prediction;
@@ -259,16 +297,27 @@ bool Dataset::classify(int i, int j, bool prediction) {
 	}
 }
 
+// Calculate various metrics for the prediction and writes to `filename`
+// Returns true if successful, false if file could not be created
 bool Dataset::writeStatsToFile(std::string filename) {
 	std::ofstream outfile(filename, std::ifstream::binary);
+
+	// Check if file created
 	if (!outfile)
 		return false;
 
+	// Accumulators
 	double totalA, totalB, totalC, totalD;
+
+	// Overall metrics
 	double microAccuracy, microPrecision, microRecall, microF1;
 	double macroAccuracy, macroPrecision, macroRecall, macroF1;
+
+	// Loop over all classes
 	for (int l=0; l < numLabels; l++) {
+		// Reset counts
 		double A=0, B=0, C=0, D=0;
+		// Loop over samples and update counts
 		for (int i=0; i < numSamples; i++) {
 			if (labels[i][l] && classified[i][l])
 				A++;
@@ -279,29 +328,38 @@ bool Dataset::writeStatsToFile(std::string filename) {
 			if (!labels[i][l] && !classified[i][l])
 				D++;
 		}
+
+		// Calculate class metrics
 		double accuracy = (A + D) / (A + B + C + D);
 		double precision = A / (A + B);
 		double recall = A / (A + C);
 		double f1 = (2 * precision * recall) / (precision + recall);
+
+		// Write counts and metrics to file
 		outfile << std::setiosflags(std::ios::fixed) << std::setprecision(0) << A << " " << B << " " << C << " " << D << " " << std::setiosflags(std::ios::fixed) << std::setprecision(3) << accuracy << " " << precision << " " << recall << " " << f1 << std::endl;
 
+		// Update accumulated counts
 		totalA += A;
 		totalB += B;
 		totalC += C;
 		totalD += D;
 
+		// Update macro averages
 		macroAccuracy += (accuracy/numLabels);
 		macroPrecision += (precision/numLabels);
 		macroRecall += (recall/numLabels);
 	}
 
+	// Calculate micro averages
 	microAccuracy = (totalA + totalD) / (totalA + totalB + totalC + totalD);
 	microPrecision = totalA / (totalA + totalB);
 	microRecall = totalA / (totalA + totalC);
 	microF1 = (2 * microPrecision * microRecall) / (microPrecision + microRecall);
 
+	// Calculate macro F1
 	macroF1 = (2 * macroPrecision * macroRecall) / (macroPrecision + macroRecall);
 
+	// Write average metrics to file
 	outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << microAccuracy << " " << microPrecision << " " << microRecall << " " << microF1 << std::endl;
 	outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << macroAccuracy << " " << macroPrecision << " " << macroRecall << " " << macroF1 << std::endl;
 
