@@ -259,7 +259,14 @@ bool Dataset::classify(int i, int j, bool prediction) {
 	}
 }
 
-void Dataset::printStats() {
+bool Dataset::writeStatsToFile(std::string filename) {
+	std::ofstream outfile(filename, std::ifstream::binary);
+	if (!outfile)
+		return false;
+
+	double totalA, totalB, totalC, totalD;
+	double microAccuracy, microPrecision, microRecall, microF1;
+	double macroAccuracy, macroPrecision, macroRecall, macroF1;
 	for (int l=0; l < numLabels; l++) {
 		double A, B, C, D;
 		for (int i=0; i < numSamples; i++) {
@@ -275,8 +282,28 @@ void Dataset::printStats() {
 		double accuracy = (A + D) / (A + B + C + D);
 		double precision = A / (A + B);
 		double recall = A / (A + C);
-		std::cout << "Accuracy: " << accuracy << std::endl;
-		std::cout << "Precision: " << precision << std::endl;
-		std::cout << "Recall: " << recall << std::endl; 
+		double f1 = (2 * precision * recall) / (precision + recall)
+		outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << A << " " << B << " " << C << " " << D << " " << accuracy << " " << precision << " " << recall << " " << f1 << std::endl;
+
+		totalA += A;
+		totalB += B;
+		totalC += C;
+		totalD += D;
+
+		macroAccuracy += (accuracy/numLabels);
+		macroPrecision += (precision/numLabels);
+		macroRecall += (recall/numLabels);
+		macroF1 += (f1/numLabels);
 	}
+
+	microAccuracy = (totalA + totalD) / (totalA + totalB + totalC + totalD);
+	microPrecision = totalA / (totalA + totalB);
+	microRecall = totalA / (totalA + totalC);
+	microF1 = (2 * microPrecision * microRecall) / (microPrecision + microRecall);
+
+	outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << microAccuracy << " " << microPrecision << " " << microRecall << " " << microF1 << std::endl;
+	outfile << std::setiosflags(std::ios::fixed) << std::setprecision(3) << macroAccuracy << " " << macroPrecision << " " << macroRecall << " " << macroF1 << std::endl;
+
+	outfile.close();
+	return true;
 }

@@ -15,7 +15,7 @@ public:
 	bool sample(int i, std::vector<double> &_features, std::vector<bool> &_labels);
 	bool classify(int i, int j, bool prediction);
 	int size(){ return numSamples; };
-	void printStats();
+	bool writeStatsToFile(std::string filename);
 };
 
 class Network {
