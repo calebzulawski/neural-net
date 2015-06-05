@@ -21,10 +21,10 @@ else
 	exit
 fi
 
-echo 'Training from WDBC training set'
+echo 'Training from training set'
 ./$TRAINPROG $INIT $TRAINEDW $TRAINDATA $LEARNRATE $EPOCHS
 
-echo 'Predicting on WDBC test set'
+echo 'Predicting on test set'
 ./$TESTPROG $TRAINEDW $TESTDATA $MYRESULTS
 
 echo
