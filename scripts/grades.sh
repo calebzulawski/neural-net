@@ -29,13 +29,13 @@ echo 'Predicting on test set'
 
 echo
 if diff -q $SAMPLEW $TRAINEDW > /dev/null; then
-	echo 'The weights are identical!'
+	echo 'The weights match the sample!'
 else
-	echo 'The weights do not match!'
+	echo 'The weights do not match the sample!'
 fi
 
 if diff -q $SAMPLERESULTS $MYRESULTS > /dev/null; then
-	echo 'The results are identical!'
+	echo 'The results match the sample!'
 else
-	echo 'The results do not match!'
+	echo 'The results do not match the sample!'
 fi
