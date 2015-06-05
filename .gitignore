@@ -6,6 +6,3 @@ test.exe
 
 # Object files
 *.o
-
-# Data
-data/

@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-	string netFilename, dataFilename, resultsFilename
+	string netFilename, dataFilename, resultsFilename;
 	
 	// ----------------------------
 	// READ INPUTS FROM ARGV OR CIN
@@ -60,9 +60,9 @@ int main(int argc, char *argv[]) {
 	// WRITE RESULTS TO FILE
 	// ---------------------
 	if (testData.writeStatsToFile(resultsFilename)) {
-		cout << "Wrote results to '" << initFilename << "'..." << endl;
+		cout << "Wrote results to '" << resultsFilename << "'..." << endl;
 	} else {
-		cout << "Could not create results file '" << initFilename << "'!" << endl;
+		cout << "Could not create results file '" << resultsFilename << "'!" << endl;
 		return 0;
 	}
 }
